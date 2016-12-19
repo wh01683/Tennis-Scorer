@@ -19,26 +19,31 @@ class Session():
 		self.p2name = args.get('--p2name', 'Player2')
 		self.p1score = args.get('--p1score', 'Love')
 		self.p2score = args.get('--p2score', 'Love')
-		self.p1wins = args.get('--p1wins', 0)
-		self.p2wins = args.get('--p2wins', 0)
+		self.p1wins = int(args.get('--p1wins', 0))
+		self.p2wins = int(args.get('--p2wins', 0))
 		self.mode = args.get('--mode', 'set')
 		
 		self.p1numscore = Validation.word_to_point[self.p1score]
 		self.p2numscore = Validation.word_to_point[self.p2score]
-	
+		
+		self.trailing_player = ''
+		
 	def run_session(self):
 		print 'Starting session.'
 		self.print_intro()
 		while True:
 			user_input = raw_input('> ')
-		  	print 'User input: ', user_input	
 			if re.compile('^(.+) scores!$').match(user_input) != None:
 				player_name = re.compile('^(.+) scores!$').match(user_input).group(1)
 				self.increment_score(player_name)
 				score_result = self.decide_game_score()
 				print score_result
-				if re.compile('^.*wins.*$').match(score_result) != None : sys.exit(0)
-
+				if re.compile('^.*wins.*$').match(score_result) != None:
+					if self.mode == 'game': sys.exit(0)
+					elif re.compile('^.*wins the game and the set.*$').match(score_result) != None: sys.exit(0)
+					self.start_new_game()
+							
+					
 			elif re.compile('^exit$').match(user_input) != None:
 				sys.exit(0)
 			
@@ -50,6 +55,12 @@ class Session():
 	def set_p2numscore(self, new_p2numscore):
 		self.p2numscore = new_p2numscore
 	
+	def start_new_game(self):
+		self.p1score = 'Love'
+		self.p2score = 'Love'
+		self.p1numscore = 0
+		self.p2numscore = 0
+		
 	def decide_game_score(self):
 		if self.p1numscore < 4 and self.p2numscore < 4:
 			return self.p1score + ' - ' + self.p2score
@@ -60,8 +71,18 @@ class Session():
 		elif 2 > (self.p2numscore - self.p1numscore) > 0:
 			return self.p2name + ' advantage!'
 		elif (self.p1numscore - self.p2numscore) > 1:
+			if self.p2wins == 6 and self.p1wins == 5 : 
+				self.trailing_player = self.p1name
+			elif (self.p2wins == 6 and self.p1wins == 6 and self.trailing_player == self.p1name) or (self.p1wins >= 6 and self.p1wins - self.p2wins >= 1): 
+				return self.p1name + ' wins the game and the set ' + str(self.p1wins + 1) + '-' + str(self.p2wins)
+			self.p1wins += 1
 			return self.p1name + ' wins the game'
 		elif (self.p2numscore - self.p1numscore) > 1:
+			if self.p1wins == 6 and self.p2wins == 5 : 
+				self.trailing_player = self.p2name
+			elif (self.p1wins == 6 and self.p2wins == 6 and self.trailing_player == self.p2name) or (self.p2wins >= 6 and self.p2wins - self.p1wins >= 1): 
+				return self.p2name + ' wins the game and the set ' + str(self.p2wins + 1) + '-' + str(self.p1wins)
+			self.p2wins += 1
 			return self.p2name + ' wins the game'
 	
 	def print_intro(self):
@@ -83,7 +104,7 @@ class Session():
 		print 'Type \'exit\' to exit the program.'
 		print '===================================================================='		
 		
-		
+	
 	def increment_score(self, player_name):
 		if player_name == self.p1name:
 			self.set_p1numscore(self.p1numscore + 1)

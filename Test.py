@@ -133,7 +133,49 @@ class TestDriverUtil(unittest.TestCase):
                 self.assertEqual(session.decide_game_score(), 'Player2 advantage!')
 		session.increment_score('Player2')
                 self.assertEqual(session.decide_game_score(), 'Player2 wins the game')
+	
+	def test_iteration_two_changes(self):
 		
+		# Testing special case
+		session = Session({'--p1name' : 'Jake', '--p1wins' : 5, '--p2wins' : 6, '--p1score' : 'Forty'})
+		
+		self.assertEqual(session.decide_game_score(), 'Forty - Love')
+		session.increment_score('Jake')
+		self.assertEqual(session.decide_game_score(), 'Jake wins the game')
+		session.start_new_game()
+		self.assertEqual(session.decide_game_score(), 'Love - Love')
+		session.increment_score('Jake')
+		self.assertEqual(session.decide_game_score(), 'Fifteen - Love')
+		session.increment_score('Jake')
+		self.assertEqual(session.decide_game_score(), 'Thirty - Love')
+		session.increment_score('Jake')
+		self.assertEqual(session.decide_game_score(), 'Forty - Love')
+		session.increment_score('Jake')
+                self.assertEqual(session.decide_game_score(), 'Jake wins the game and the set 7-6')
+	
+		# Testing normal case
+		session2 = Session({'--p1name' : 'K', '--p1wins' : 6, '--p2wins' : 7, '--p1score' : 'Forty'})
+		session2.increment_score('K')
+		self.assertEqual(session2.decide_game_score(), 'K wins the game')
+		self.assertEqual(session2.p1wins, 7)
+                self.assertEqual(session2.p2wins, 7)
+		session2.start_new_game()
+		session2.increment_score('K')
+		session2.increment_score('K')
+		session2.increment_score('K')
+		session2.increment_score('K')
+		self.assertEqual(session2.decide_game_score(), 'K wins the game')
+		self.assertEqual(session2.p1wins, 8)
+		self.assertEqual(session2.p2wins, 7)
+		session2.start_new_game()
+                session2.increment_score('K')
+                session2.increment_score('K')
+                session2.increment_score('K')
+                session2.increment_score('K')
+                self.assertEqual(session2.decide_game_score(), 'K wins the game and the set 9-7')
+		
+
+	
 if __name__ == '__main__':
 	unittest.main()
 	
